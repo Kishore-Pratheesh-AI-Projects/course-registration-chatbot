@@ -1,5 +1,6 @@
 import weave
 
+from .reranker import Reranker
 from .utils import load_model_and_tokenizer, initialize_chromadb_client, load_embedding_model
 
 # Step 2: Load Model and Tokenizer
@@ -11,6 +12,8 @@ collection = initialize_chromadb_client("./chromadb").get_or_create_collection("
 
 embedding_model_name = 'all-MiniLM-L6-v2'
 embedding_model = load_embedding_model(embedding_model_name)
+
+reranker = Reranker(device="cuda" if torch.cuda.is_available() else "cpu")
 
 weave.init(project_name="Naive_RAG_Reviews")
 
@@ -35,11 +38,12 @@ class NaiveReviewsRAGPipeline:
     Answer the questions comprehensively using the reviews from the context by summarizing them to help the student.
     """
     
-    def __init__(self, embedding_model, collection, model, tokenizer):
+    def __init__(self, embedding_model, collection, model, tokenizer, reranker):
         self.embedding_model = embedding_model
         self.collection = collection
         self.model = model
         self.tokenizer = tokenizer
+        self.reranker = reranker
 
     @weave.op
     def retrieve(self, query, top_k=5):
@@ -55,10 +59,18 @@ class NaiveReviewsRAGPipeline:
         return results["documents"]
 
     @weave.op
-    def generate_response(self, query, retrieved_docs):
+    def rerank_documents(self, query, retrieved_docs, top_k):
         # Flatten the list of retrieved documents
         flattened_docs = [doc for sublist in retrieved_docs for doc in sublist]
-        context = "\n".join(flattened_docs)
+        
+        # Rerank using the reranker
+        reranked_docs = self.reranker.rerank(query, flattened_docs, top_k=top_k)
+        return reranked_docs
+
+    @weave.op
+    def generate_response(self, query, retrieved_docs):
+        # Join reranked documents into a context string
+        context = "\n".join(retrieved_docs)
         
         # Prepare messages
         messages = [
@@ -75,7 +87,7 @@ class NaiveReviewsRAGPipeline:
         model_inputs = self.tokenizer([text], return_tensors="pt").to(self.model.device)
         generated_ids = self.model.generate(
             **model_inputs,
-            max_new_tokens=4098*4,
+            max_new_tokens=4098,
             temperature=0.1
         )
         # Remove input tokens from output to isolate generated text
@@ -93,15 +105,20 @@ class NaiveReviewsRAGPipeline:
         # Step 1: Retrieve relevant documents
         retrieved_docs = self.retrieve(query, top_k)
 
+        print("Reranking")
+        # Step 2: Rerank the retrieved documents
+        reranked_docs = self.rerank_documents(query, retrieved_docs, top_k)
+
         print("Generating Response")
-        # Step 2: Generate a response
-        return self.generate_response(query, retrieved_docs)
+        # Step 3: Generate a response
+        return self.generate_response(query, reranked_docs)
+
 
 # Step 4: Use the RAG Pipeline
 rag_pipeline = NaiveReviewsRAGPipeline(embedding_model, collection, model, tokenizer)
 
 with weave.attributes({'user_id': 's-kishore', 'env': 'testing'}):
     # Example Query
-    query = "Did students felt that they've wasted their money by taking Foundations of Artificial Intelligence under Prof. Raj Venkat?"
+    query = "How difficult is Algorithms under Prof. Raj Venkat?"
     response = rag_pipeline(query, top_k=5)
     print(response)
