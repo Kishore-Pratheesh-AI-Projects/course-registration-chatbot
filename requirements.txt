@@ -27,7 +27,6 @@ chromadb==0.5.23
 click==8.1.8
 coloredlogs==15.0.1
 comm==0.2.2
--e git+ssh://git@github.com/Kishore-Pratheesh-AI-Projects/course-registration-chatbot.git@84881325c882bc253bdcaeeebe9de7ce217dc02c#egg=curriculum_compass
 debugpy==1.8.11
 decorator==5.1.1
 defusedxml==0.7.1

@@ -1,6 +1,6 @@
 import weave
 
-from utils import load_model_and_tokenizer, initialize_chromadb_client, load_embedding_model
+from .utils import load_model_and_tokenizer, initialize_chromadb_client, load_embedding_model
 
 # Step 2: Load Model and Tokenizer
 model_name = "Qwen/Qwen2.5-3B-Instruct"
@@ -16,7 +16,7 @@ weave.init(project_name="Naive_RAG_Reviews")
 
 
 # Step 3: RAG Pipeline
-class RAGPipeline:
+class NaiveReviewsRAGPipeline:
     SYSTEM_INSTRUCTION = """
     You are Course Compass, a chatbot dedicated to assisting Northeastern University graduate students with course registration each semester.
     You have access to the latest information on available graduate courses, faculty profiles, and summarized student feedback from previous semesters.
@@ -98,7 +98,7 @@ class RAGPipeline:
         return self.generate_response(query, retrieved_docs)
 
 # Step 4: Use the RAG Pipeline
-rag_pipeline = RAGPipeline(embedding_model, collection, model, tokenizer)
+rag_pipeline = NaiveReviewsRAGPipeline(embedding_model, collection, model, tokenizer)
 
 with weave.attributes({'user_id': 's-kishore', 'env': 'testing'}):
     # Example Query
