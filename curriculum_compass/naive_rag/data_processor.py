@@ -61,7 +61,7 @@ class CourseDataProcessor:
                 f"{description_section.lower()}")
 
     @staticmethod
-    def process_course_data(file_path):
+    def process_course_data(file_path)->list:
         """Process entire course dataset and convert to structured text."""
         df = pd.read_csv(file_path)
         return [CourseDataProcessor.course_to_structured_text(row) for _, row in df.iterrows()]

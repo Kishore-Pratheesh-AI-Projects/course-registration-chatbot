@@ -28,9 +28,9 @@ class CourseSearchSystem:
         elif 'artificial intelligence' in query:
             query_parts['course'] = 'artificial intelligence'
             
-        # Extract professor name (extend based on your needs)
-        if 'rajagopal' in query or 'venkatesaramani' in query:
-            query_parts['professor'] = 'venkatesaramani, rajagopal'
+        # # Extract professor name (extend based on your needs)
+        # if 'rajagopal' in query or 'venkatesaramani' in query:
+        #     query_parts['professor'] = 'venkatesaramani, rajagopal'
             
         # Extract term
         if 'spring 2025' in query:
@@ -58,7 +58,7 @@ class CourseSearchSystem:
             
         return enhanced_query, query_parts
 
-    def add_course_sentences_to_db(self, course_data):
+    def add_course_sentences_to_db(self, course_data)->None:
         """Add processed course data to the search system"""
         self.documents = [doc for doc in course_data if doc is not None]
         self.tfidf_matrix = self.vectorizer.fit_transform(self.documents)
