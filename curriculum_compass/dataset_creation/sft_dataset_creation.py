@@ -1,0 +1,2 @@
+from curriculum_compass.naive_rag import NaiveReviewsRAGPipeline
+
