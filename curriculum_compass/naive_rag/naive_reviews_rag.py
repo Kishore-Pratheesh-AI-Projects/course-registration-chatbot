@@ -1,7 +1,8 @@
+import torch
 import weave
 
-from .reranker import Reranker
-from .utils import load_model_and_tokenizer, initialize_chromadb_client, load_embedding_model
+from curriculum_compass.naive_rag.reranker import Reranker
+from curriculum_compass.naive_rag.utils import load_model_and_tokenizer, initialize_chromadb_client, load_embedding_model
 
 # Step 2: Load Model and Tokenizer
 model_name = "Qwen/Qwen2.5-3B-Instruct"
@@ -115,7 +116,7 @@ class NaiveReviewsRAGPipeline:
 
 
 # Step 4: Use the RAG Pipeline
-rag_pipeline = NaiveReviewsRAGPipeline(embedding_model, collection, model, tokenizer)
+rag_pipeline = NaiveReviewsRAGPipeline(embedding_model, collection, model, tokenizer, reranker)
 
 with weave.attributes({'user_id': 's-kishore', 'env': 'testing'}):
     # Example Query
