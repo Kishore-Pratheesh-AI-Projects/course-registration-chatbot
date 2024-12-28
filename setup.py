@@ -22,7 +22,7 @@ setup(
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     url=URL,
-    packages=find_packages(exclude=["chromadb"]),
+    packages=find_packages(exclude=["chromadb", "notebooks"]),
     python_requires=REQUIRES_PYTHON,
     install_requires=INSTALL_REQUIRES,
     include_package_data=True,
