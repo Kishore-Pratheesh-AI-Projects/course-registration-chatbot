@@ -2,7 +2,8 @@ import weave
 from course_retriever import CourseRAGPipeline
 from review_retriever import ReviewsRAGPipeline
 from reranker import Reranker
-from utils import load_course_data,load_config,load_model_and_tokenizer,generate_llm_response,load_embedding_model,initialize_chromadb_client,get_device
+from retriever_utils import load_course_data
+from utils import load_config,load_model_and_tokenizer,generate_llm_response,load_embedding_model,initialize_chromadb_client,get_device
 
 
 
@@ -85,23 +86,25 @@ def main():
 # ======= Load Json Configurations =======
     config = load_config()
 
+    chromadb_client = initialize_chromadb_client("./chromadb")
+
 
 # ===== Initialize the re-ranker ===========
     device = get_device()
-    Reranker = Reranker(config['reranker_model_name'],device)
+    reranker = Reranker(config['reranker_model_name'],device)
 
 # ===== Initialize the CourseRagPipeline ===========
 
     course_data = load_course_data(config['course_data_path'])
-    course_rag = CourseRAGPipeline(Reranker)
+    course_rag = CourseRAGPipeline(reranker)
     course_rag.intiliaze_course_search_system(course_data)
 
 # ===== Initialize the NaiveReviewsRAGPipeline ===========
 
     #TODO : Initialize the NaiveReviewsRAGPipeline with the appropriate parameters
-    embedding_model = load_embedding_model(config['embedding_model'])
-    collection = initialize_chromadb_client("./chromadb").get_or_create_collection("naive_rag_embeddings")
-    review_rag = ReviewsRAGPipeline(embedding_model, collection,Reranker)
+    embedding_model = load_embedding_model(config['embedding_model_name'])
+    collection = chromadb_client.get_or_create_collection("naive_rag_embeddings")
+    review_rag = ReviewsRAGPipeline(embedding_model, collection,reranker)
     
 # ===== Initialize the IntegratedRAGPipeline ===========
     integrated_rag = IntegratedRAGPipeline(course_rag, review_rag,config)
