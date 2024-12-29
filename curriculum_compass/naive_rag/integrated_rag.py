@@ -11,12 +11,12 @@ from utils import load_config,load_model_and_tokenizer,generate_llm_response,loa
 weave.init(project_name="Course_RAG_System")
 
 class IntegratedRAGPipeline:
-    def __init__(self, course_rag: CourseRAGPipeline, review_rag: ReviewsRAGPipeline,config:dict): 
+    def __init__(self, course_rag: CourseRAGPipeline, review_rag: ReviewsRAGPipeline,config:dict,device:str): 
         self.course_rag = course_rag
         self.review_rag = review_rag
         self.LLM = config['llm']
         self.model, self.tokenizer = load_model_and_tokenizer(self.LLM)
-        self.final_reranker = Reranker() 
+        self.final_reranker = Reranker(config['reranker_model_name'],device) 
         self.system_prompt = config["system_prompt"]
         
     @weave.op(name="get_course_info")
@@ -91,6 +91,7 @@ def main():
 
 # ===== Initialize the re-ranker ===========
     device = get_device()
+    print(f"Using device: {device}")
     reranker = Reranker(config['reranker_model_name'],device)
 
 # ===== Initialize the CourseRagPipeline ===========
@@ -107,7 +108,7 @@ def main():
     review_rag = ReviewsRAGPipeline(embedding_model, collection,reranker)
     
 # ===== Initialize the IntegratedRAGPipeline ===========
-    integrated_rag = IntegratedRAGPipeline(course_rag, review_rag,config)
+    integrated_rag = IntegratedRAGPipeline(course_rag, review_rag,config,device)
 
 # ===== Example usage of the IntegratedRAGPipeline ===========
     
