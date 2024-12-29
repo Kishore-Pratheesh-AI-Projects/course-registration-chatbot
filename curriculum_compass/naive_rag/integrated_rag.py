@@ -1,6 +1,6 @@
 import weave
 from course_retriever import CourseRAGPipeline
-from review_retriever import NaiveReviewsRAGPipeline
+from review_retriever import ReviewsRAGPipeline
 from reranker import Reranker
 from utils import load_course_data,load_config,load_model_and_tokenizer,generate_llm_response,load_embedding_model,initialize_chromadb_client,get_device
 
@@ -10,7 +10,7 @@ from utils import load_course_data,load_config,load_model_and_tokenizer,generate
 weave.init(project_name="Course_RAG_System")
 
 class IntegratedRAGPipeline:
-    def __init__(self, course_rag: CourseRAGPipeline, review_rag: NaiveReviewsRAGPipeline,config:dict): 
+    def __init__(self, course_rag: CourseRAGPipeline, review_rag: ReviewsRAGPipeline,config:dict): 
         self.course_rag = course_rag
         self.review_rag = review_rag
         self.LLM = config['llm']
@@ -101,7 +101,7 @@ def main():
     #TODO : Initialize the NaiveReviewsRAGPipeline with the appropriate parameters
     embedding_model = load_embedding_model(config['embedding_model'])
     collection = initialize_chromadb_client("./chromadb").get_or_create_collection("naive_rag_embeddings")
-    review_rag = NaiveReviewsRAGPipeline(embedding_model, collection,Reranker)
+    review_rag = ReviewsRAGPipeline(embedding_model, collection,Reranker)
     
 # ===== Initialize the IntegratedRAGPipeline ===========
     integrated_rag = IntegratedRAGPipeline(course_rag, review_rag,config)
