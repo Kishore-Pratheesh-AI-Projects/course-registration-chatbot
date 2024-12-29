@@ -114,7 +114,7 @@ def main():
     
     # Example usage with weave tracing
     with weave.attributes({'user_id': 'test_user', 'env': 'testing'}):
-        query = "What do students say about the workload in AI courses, and which ones are currently available?"
+        query = "How is Machine Learning under Prof. Paul Hand?"
         response = integrated_rag(query,config['course_k'],config['review_k'],config['final_k'])
         print(f"\nQuery: {query}")
         print(f"Response: {response}")
