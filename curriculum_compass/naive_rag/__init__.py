@@ -1,4 +1,4 @@
-from .naive_reviews_rag import NaiveReviewsRAGPipeline
+from .review_retriever import NaiveReviewsRAGPipeline
 
 __all__ = [
     "NaiveReviewsRAGPipeline"
