@@ -20,7 +20,7 @@ import weave
 
 
 # Step 3: RAG Pipeline
-class NaiveReviewsRAGPipeline:
+class ReviewsRAGPipeline:
     # SYSTEM_INSTRUCTION = """
     # You are Curriculum Compass, a chatbot dedicated to assisting Northeastern University graduate students with course registration for the spring 2025 semester.
     # You have access to the latest information on available graduate courses for the spring 2025 semester, faculty profiles, and summarized student feedback from previous semesters.
