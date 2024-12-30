@@ -2,8 +2,6 @@ from typing import Tuple, Dict, Any
 import weave
 from llm_guard.input_scanners import Gibberish, BanSubstrings, PromptInjection, TokenLimit
 from llm_guard.output_scanners import Bias, NoRefusal, Gibberish as OutputGibberish
-from llm_guard.scan_output import scan_output
-from llm_guard.scan_input import scan_input
 
 class LLMGuard:
     """
@@ -17,19 +15,19 @@ class LLMGuard:
             model_name: The name of the model being used (for token limit calculation)
         """
         # Initialize input scanners
-        self.input_scanners = {
-            "gibberish": Gibberish(),
-            "ban_substrings": BanSubstrings(),
-            "prompt_injection": PromptInjection(),
-            "token_limit": TokenLimit(model_name)
-        }
+        self.input_scanners = [
+            Gibberish(),
+            BanSubstrings(),
+            PromptInjection(),
+            TokenLimit(model_name)
+        ]
         
         # Initialize output scanners
-        self.output_scanners = {
-            "bias": Bias(),
-            "no_refusal": NoRefusal(),
-            "gibberish": OutputGibberish()
-        }
+        self.output_scanners = [
+            Bias(),
+            NoRefusal(),
+            OutputGibberish()
+        ]
 
     @weave.op(name="scan_input_with_guard")
     def validate_input(self, text: str) -> Tuple[bool, str, Dict[str, Any]]:
@@ -46,18 +44,29 @@ class LLMGuard:
             - Dictionary containing detailed results from each scanner
         """
         try:
-            is_valid, results = scan_input(text, self.input_scanners)
+            results = [scanner.is_valid(text) for scanner in self.input_scanners]
+            is_valid = all(result.is_valid for result in results)
             
             # Compile detailed feedback from results
             feedback = ""
             if not is_valid:
                 failed_scanners = [
-                    scanner_name for scanner_name, result in results.items() 
-                    if not result.valid
+                    type(scanner).__name__ for scanner, result in zip(self.input_scanners, results)
+                    if not result.is_valid
                 ]
                 feedback = f"Failed scanners: {', '.join(failed_scanners)}"
             
-            return is_valid, feedback, results
+            # Convert results to dictionary for consistency
+            results_dict = {
+                type(scanner).__name__: {
+                    'is_valid': result.is_valid,
+                    'risk_score': result.risk_score,
+                    'comment': result.comment
+                }
+                for scanner, result in zip(self.input_scanners, results)
+            }
+            
+            return is_valid, feedback, results_dict
             
         except Exception as e:
             return False, f"Error during input scanning: {str(e)}", {}
@@ -78,18 +87,29 @@ class LLMGuard:
             - Dictionary containing detailed results from each scanner
         """
         try:
-            is_valid, results = scan_output(text, prompt, self.output_scanners)
+            results = [scanner.is_valid(text, prompt) for scanner in self.output_scanners]
+            is_valid = all(result.is_valid for result in results)
             
             # Compile detailed feedback from results
             feedback = ""
             if not is_valid:
                 failed_scanners = [
-                    scanner_name for scanner_name, result in results.items() 
-                    if not result.valid
+                    type(scanner).__name__ for scanner, result in zip(self.output_scanners, results)
+                    if not result.is_valid
                 ]
                 feedback = f"Failed scanners: {', '.join(failed_scanners)}"
             
-            return is_valid, feedback, results
+            # Convert results to dictionary for consistency
+            results_dict = {
+                type(scanner).__name__: {
+                    'is_valid': result.is_valid,
+                    'risk_score': result.risk_score,
+                    'comment': result.comment
+                }
+                for scanner, result in zip(self.output_scanners, results)
+            }
+            
+            return is_valid, feedback, results_dict
             
         except Exception as e:
             return False, f"Error during output scanning: {str(e)}", {}
