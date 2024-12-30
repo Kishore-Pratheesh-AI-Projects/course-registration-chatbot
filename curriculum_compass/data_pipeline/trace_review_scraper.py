@@ -130,19 +130,3 @@ class TraceReviewScraper:
         
         return df
 
-# def main():
-#     """
-#     Main execution function for review scraping.
-#     """
-#     FileManager.ensure_directory('./data')
-    
-#     scraper = TraceReviewScraper()
-#     df = scraper.process_reviews('./data')
-    
-#     if not df.empty:
-#         FileManager.save_dataframe(df, './data/reviews.csv')
-#     else:
-#         print("No reviews were scraped.")
-
-# if __name__ == "__main__":
-#     main()
