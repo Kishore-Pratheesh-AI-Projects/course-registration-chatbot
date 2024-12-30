@@ -59,15 +59,20 @@ def load_config():
     return config
 
 @weave.op(name="generate_llm_response")
-def generate_llm_response(system_prompt: str, query:str,retrieved_docs:list,model:AutoModelForCausalLM,tokenizer:AutoTokenizer):
+def generate_llm_response(system_prompt: str, query: str, retrieved_docs: list, 
+                     model: AutoModelForCausalLM, tokenizer: AutoTokenizer):
     """Generate response using the language model"""
-    # Join reranked documents into a context string
-    context = "\n".join(retrieved_docs)
+    # Only include context if retrieved_docs is not empty
+    if retrieved_docs:
+        context = "\n".join(retrieved_docs)
+        user_content = f"Context:\n{context}\n\nQuery: {query}\n\nAnswer:"
+    else:
+        user_content = f"Query: {query}\n\nAnswer:"
     
     # Prepare messages
     messages = [
         {"role": "system", "content": system_prompt},
-        {"role": "user", "content": f"Context:\n{context}\n\nQuery: {query}\n\nAnswer:"}
+        {"role": "user", "content": user_content}
     ]
     
     # Tokenize and generate
@@ -90,3 +95,5 @@ def generate_llm_response(system_prompt: str, query:str,retrieved_docs:list,mode
     response = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
 
     return response
+
+ 
