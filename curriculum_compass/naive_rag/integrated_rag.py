@@ -4,6 +4,7 @@ from review_retriever import ReviewsRAGPipeline
 from reranker import Reranker
 from retriever_utils import load_course_data
 from utils import load_config,load_model_and_tokenizer,generate_llm_response,load_embedding_model,initialize_chromadb_client,get_device
+from query_validator import QueryValidator
 
 
 
@@ -110,14 +111,21 @@ def main():
 # ===== Initialize the IntegratedRAGPipeline ===========
     integrated_rag = IntegratedRAGPipeline(course_rag, review_rag,config,device)
 
+# ===== Initlialize the Query Validator ===========
+    query_validator = QueryValidator(config['query_validator_model_name'],device)
+
 # ===== Example usage of the IntegratedRAGPipeline ===========
     
     # Example usage with weave tracing
     with weave.attributes({'user_id': 'test_user', 'env': 'testing'}):
         query = "How is Machine Learning under Prof. Paul Hand?"
-        response = integrated_rag(query,config['course_k'],config['review_k'],config['final_k'])
-        print(f"\nQuery: {query}")
-        print(f"Response: {response}")
+        if query_validator.handle_user_query(query):
+            response = integrated_rag(query,config['course_k'],config['review_k'],config['final_k'])
+            print(f"\nQuery: {query}")
+            print(f"Response: {response}")
+        else:
+            #TODO : Add a response for invalid queries
+            print("Invalid Query") 
 
 if __name__ == "__main__":
     main()
