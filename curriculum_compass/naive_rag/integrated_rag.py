@@ -1,5 +1,5 @@
 import weave
-from curriculum_compass.naive_rag.query_validator import QueryValidator
+from curriculum_compass.naive_rag.llm_input_output_validator import LLMInputOutputValidator
 from curriculum_compass.naive_rag.course_retriever import CourseRAGPipeline
 from curriculum_compass.naive_rag.review_retriever import ReviewsRAGPipeline
 from curriculum_compass.naive_rag.reranker import Reranker
@@ -83,7 +83,7 @@ class IntegratedRAGPipeline:
         print("Generating integrated response...")
         response = self.generate_response(query, combined_docs)
         
-        return combined_docs, response
+        return response
     
 
 def main():
@@ -117,19 +117,33 @@ def main():
     integrated_rag = IntegratedRAGPipeline(course_rag, review_rag,config,device)
 
 # ===== Initlialize the Query Validator ===========
-    query_validator = QueryValidator(config['query_model_name'],device)
+    query_validator = LLMInputOutputValidator(config['query_model_name'],device)
 
 # ===== Example usage of the IntegratedRAGPipeline ===========
     
     # Example usage with weave tracing
     with weave.attributes({'user_id': 'test_user', 'env': 'testing'}):
         query = "How is the weather today?"
-        if query_validator.handle_user_query(query) :
-            response = integrated_rag(query,config['course_k'],config['review_k'],config['final_k'])
-            print(f"\nQuery: {query}")
-            print(f"Response: {response}")
+        input_status, _, _ = query_validator.validate_input(query)
+        if input_status:
+            try:
+                response = integrated_rag(query,config['course_k'],
+                                        config['review_k'],
+                                        config['final_k'])
+                # print(f"\nQuery: {query}")
+                # print(f"Response: {response}")
+                output_status, _, _ = query_validator.validate_output(response,query)
+                if output_status:
+                    print(f"Response: {response}")
+                else:
+                    #TODO : Add a response for invalid responses
+                    # print(f"\{reason}")
+                    print("Invalid Response")
+            except Exception as e:
+                print(f"Error during processing: {str(e)}")
         else:
             #TODO : Add a response for invalid queries
+            # print(f"\{reason}")
             print("Invalid Query") 
 
 if __name__ == "__main__":
