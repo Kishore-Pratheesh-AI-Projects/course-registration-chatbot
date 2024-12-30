@@ -1,10 +1,16 @@
 import weave
-from course_retriever import CourseRAGPipeline
-from review_retriever import ReviewsRAGPipeline
-from reranker import Reranker
-from retriever_utils import load_course_data
-from utils import load_config,load_model_and_tokenizer,generate_llm_response,load_embedding_model,initialize_chromadb_client,get_device
 
+from curriculum_compass.naive_rag.course_retriever import CourseRAGPipeline
+from curriculum_compass.naive_rag.review_retriever import ReviewsRAGPipeline
+from curriculum_compass.naive_rag.reranker import Reranker
+from curriculum_compass.naive_rag.retriever_utils import load_course_data
+from curriculum_compass.naive_rag.utils import get_device
+from curriculum_compass.naive_rag.utils import load_config
+from curriculum_compass.naive_rag.utils import load_embedding_model
+from curriculum_compass.naive_rag.utils import generate_llm_response
+from curriculum_compass.naive_rag.utils import load_model_and_tokenizer
+from curriculum_compass.naive_rag.utils import initialize_chromadb_client
+from curriculum_compass.naive_rag.retriever_utils import load_course_data
 
 
 # Initialize weave
@@ -77,7 +83,7 @@ class IntegratedRAGPipeline:
         print("Generating integrated response...")
         response = self.generate_response(query, combined_docs)
         
-        return response
+        return combined_docs, response
     
 
 def main():
@@ -115,7 +121,7 @@ def main():
     # Example usage with weave tracing
     with weave.attributes({'user_id': 'test_user', 'env': 'testing'}):
         query = "How is Machine Learning under Prof. Paul Hand?"
-        response = integrated_rag(query,config['course_k'],config['review_k'],config['final_k'])
+        _, response = integrated_rag(query,config['course_k'],config['review_k'],config['final_k'])
         print(f"\nQuery: {query}")
         print(f"Response: {response}")
 

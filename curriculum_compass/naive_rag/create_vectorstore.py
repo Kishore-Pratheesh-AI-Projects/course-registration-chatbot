@@ -9,7 +9,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from tqdm import tqdm
 import chromadb
 
-from utils import load_embedding_model, initialize_chromadb_client
+from curriculum_compass.naive_rag.utils import load_embedding_model, initialize_chromadb_client
 
 def load_reviews_data(file_path: Path) -> pd.DataFrame:
     """Load reviews data from a CSV file.
