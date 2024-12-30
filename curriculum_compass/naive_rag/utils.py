@@ -50,8 +50,8 @@ def initialize_chromadb_client(db_path: str):
     return chromadb.PersistentClient(path=db_path)
 
 
-def load_config():
-    with open('config.json', 'r') as config_file:
+def load_config(config_path='config.json'):
+    with open(config_path, 'r') as config_file:
         config = json.load(config_file)
     return config
 

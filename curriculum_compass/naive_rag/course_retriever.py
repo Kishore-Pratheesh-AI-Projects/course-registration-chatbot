@@ -1,8 +1,8 @@
 
 import weave
-# from utils import load_model_and_tokenizer
-# from data_processor import CourseDataProcessor
-from search_system import CourseSearchSystem
+
+
+from curriculum_compass.naive_rag.search_system import CourseSearchSystem
 
 
 # # Initialize weave
