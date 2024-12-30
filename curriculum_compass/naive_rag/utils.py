@@ -19,16 +19,13 @@ def get_device():
         return 'cpu'
 
 def load_model_and_tokenizer(model_name: str):
-    """Load a language model and its tokenizer.
-    Args:
-        model_name (str): The name of the model to load.
-    Returns:
-        tuple: A tuple containing the loaded model and tokenizer.
+    """
+    Load a language model and its tokenizer with proper device mapping handled by Accelerate
     """
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
         torch_dtype="auto",
-        device_map="auto"
+        device_map="auto"  # Let Accelerate handle device placement
     )
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     return model, tokenizer
@@ -59,34 +56,54 @@ def load_config(config_path='config.json'):
     return config
 
 @weave.op(name="generate_llm_response")
-def generate_llm_response(system_prompt: str, query:str,retrieved_docs:list,model:AutoModelForCausalLM,tokenizer:AutoTokenizer):
+def load_model_and_tokenizer(model_name: str):
+    """
+    Load a language model and its tokenizer with proper device mapping handled by Accelerate
+    """
+    model = AutoModelForCausalLM.from_pretrained(
+        model_name,
+        torch_dtype="auto",
+        device_map="auto"  # Let Accelerate handle device placement
+    )
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    return model, tokenizer
+
+def generate_llm_response(system_prompt: str, query: str, retrieved_docs: list, 
+                         model: AutoModelForCausalLM, tokenizer: AutoTokenizer):
     """Generate response using the language model"""
-    # Join reranked documents into a context string
-    context = "\n".join(retrieved_docs)
+    if retrieved_docs:
+        context = "\n".join(retrieved_docs)
+        user_content = f"Context:\n{context}\n\nQuery: {query}\n\nAnswer:"
+    else:
+        user_content = f"Query: {query}\n\nAnswer:"
     
-    # Prepare messages
     messages = [
         {"role": "system", "content": system_prompt},
-        {"role": "user", "content": f"Context:\n{context}\n\nQuery: {query}\n\nAnswer:"}
+        {"role": "user", "content": user_content}
     ]
     
-    # Tokenize and generate
     text = tokenizer.apply_chat_template(
         messages,
         tokenize=False,
         add_generation_prompt=True
     )
-    model_inputs = tokenizer([text], return_tensors="pt").to(model.device)
+    # Don't manually specify device - use the device Accelerate chose
+    model_inputs = tokenizer([text], return_tensors="pt")
+    
+    # Move inputs to the same device as the model
+    if hasattr(model, 'device'):
+        model_inputs = {k: v.to(model.device) for k, v in model_inputs.items()}
+    
     generated_ids = model.generate(
         **model_inputs,
         max_new_tokens=4098,
         temperature=0.1
     )
-    # Remove input tokens from output to isolate generated text
+    
     generated_ids = [
         output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
     ]
     
     response = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
-
+    
     return response
