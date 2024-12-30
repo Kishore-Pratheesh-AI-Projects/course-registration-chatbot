@@ -1,13 +1,19 @@
-from utils import load_model_and_tokenizer, get_device, generate_llm_response
+from utils import load_model_and_tokenizer, generate_llm_response
+import weave
 
 class QueryValidator:
     def __init__(self, model_name: str, device: str):
+        """
+        Initialize the QueryValidator.
+        Note: We don't manually move the model to device since it's handled by Accelerate
+        """
         self.model_name = model_name
         self.model, self.tokenizer = load_model_and_tokenizer(model_name)
         self.device = device
-        self.model.to(self.device)
+        # Remove the model.to(device) call since Accelerate handles device placement
         self.model.eval()
 
+    @weave.op(name="validate_input")
     def validate_input(self, user_query: str) -> str:
         """
         Classify whether a user query is relevant or not relevant
@@ -19,9 +25,9 @@ You are a helpful AI system tasked with filtering user questions about Northeast
 ### Relevancy Rules
 - Relevant questions are those about:
   • Course offerings, schedules, prerequisites, or location (campus vs. online).
-  • Professor/faculty information (e.g., who is teaching, professor’s teaching style).
+  • Professor/faculty information (e.g., who is teaching, professor's teaching style).
   • Opinions or reviews about the course or professor (e.g., workload, grading difficulty).
-  • Past or present course reviews (e.g., “Has this course been offered in the past? How were the reviews?”).
+  • Past or present course reviews (e.g., "Has this course been offered in the past? How were the reviews?").
   • Anything else directly related to Northeastern courses or professors.
 
 - Irrelevant questions:
@@ -47,7 +53,7 @@ Your output:
 6) User query: "Has Data Structures been offered previously? Any reviews about difficulty?"
    Answer: RELEVANT
 """
-        
+        # Use generate_llm_response but don't modify model device placement
         response = generate_llm_response(
             system_prompt=system_prompt,
             query=user_query,
@@ -57,12 +63,12 @@ Your output:
         )
         
         classification = response.upper()
-
         
         if classification not in ["RELEVANT", "NOT RELEVANT"]:
             classification = "NOT RELEVANT"
         return classification
 
+    @weave.op(name="handle_user_query")
     def handle_user_query(self, user_query: str) -> bool:
         """
         Wrapper function that first checks relevancy of the user query.
