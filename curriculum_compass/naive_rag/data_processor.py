@@ -1,5 +1,5 @@
 import pandas as pd
-from curriculum_compass.naive_rag.time_utils import clean_time, format_time
+from time_utils import clean_time, format_time
 
 class CourseDataProcessor:
     @staticmethod
