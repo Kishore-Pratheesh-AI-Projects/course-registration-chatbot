@@ -16,7 +16,7 @@ class LLMGuard:
         """
         # Initialize input scanners
         self.input_scanners = [
-            Gibberish(),
+            Gibberish(threshold=0.50),
             BanSubstrings(substrings=banned_substrings),
             PromptInjection(),
             TokenLimit()
