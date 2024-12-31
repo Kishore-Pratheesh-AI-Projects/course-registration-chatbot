@@ -2,7 +2,7 @@
 import weave
 
 
-from curriculum_compass.naive_rag.search_system import CourseSearchSystem
+from search_system import CourseSearchSystem
 
 
 # # Initialize weave
