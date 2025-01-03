@@ -656,13 +656,15 @@ Additionally, we used LLM-as-a-judge to evaluate the RAG system across the RAG t
 │       │   │   # Notebook demonstrating initial data cleaning/preprocessing steps
 │       │   └── NaiveRAG-Kishore-Implementation.ipynb
 │       │       # Notebook detailing an example or reference implementation of a naive RAG pipeline
-│       ├── query_validator.py    # LLMGuard + Relevancy checks for user queries
+│       ├── validator.py          # Relevancy checks for user queries
+        ├── guard.py              # Module for gaurd-railing using LLM-Guard
 │       ├── reranker.py           # Module for re-ranking retrieved documents using cross-encoders
 │       ├── retriever_utils.py    # Utility functions for retrieval and vector search
 │       ├── review_retriever.py   # Module to retrieve review data from vector databases or CSV files
 │       ├── search_system.py      # Core "search" logic orchestrating retrieval processes
 │       ├── time_utils.py         # Utility functions for handling scheduling/time-based data
 │       └── utils.py              # General-purpose utility functions (e.g., logging, config parsing)
+│       └── time_utils.py         # time utility function 
 ├── requirements.txt              # Dependencies and library requirements for the project
 └── setup.py                      # Setup script for packaging/distribution (if publishing this project)
 ```
