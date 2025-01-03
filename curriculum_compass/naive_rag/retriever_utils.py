@@ -1,4 +1,4 @@
-from curriculum_compass.naive_rag.data_processor import CourseDataProcessor
+from data_processor import CourseDataProcessor
 
 def load_course_data(file_path: str):
     """Load and process course data.

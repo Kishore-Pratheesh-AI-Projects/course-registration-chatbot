@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 PACKAGE_NAME = "curriculum_compass"
 VERSION = "0.0.1"
 AUTHOR="Kishore Sampath, Pratheesh"
-AUTHOR_EMAIL = "skishore2602.dev@gmail.com, author2.email@example.com"
+AUTHOR_EMAIL = "skishore2602.dev@gmail.com, lnu.prat@northeastern.edu"
 DESCRIPTION = "Curriculum Compass is a conversational AI chatbot designed to assist Northeastern University graduate students with course registration."
 URL = "https://github.com/Kishore-Pratheesh-AI-Projects/course-registration-chatbot"
 REQUIRES_PYTHON = ">=3.7"

@@ -63,47 +63,41 @@ def load_model_and_tokenizer(model_name: str):
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
         torch_dtype="auto",
-        device_map="auto"  # Let Accelerate handle device placement
+        device_map="auto" 
     )
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     return model, tokenizer
 
+
+@weave.op(name="LLM_output")
 def generate_llm_response(system_prompt: str, query: str, retrieved_docs: list, 
-                         model: AutoModelForCausalLM, tokenizer: AutoTokenizer):
+                         model: AutoModelForCausalLM, tokenizer: AutoTokenizer,temperature:float=0.1):
     """Generate response using the language model"""
     if retrieved_docs:
         context = "\n".join(retrieved_docs)
         user_content = f"Context:\n{context}\n\nQuery: {query}\n\nAnswer:"
     else:
         user_content = f"Query: {query}\n\nAnswer:"
-    
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_content}
     ]
-    
     text = tokenizer.apply_chat_template(
         messages,
         tokenize=False,
         add_generation_prompt=True
     )
-    # Don't manually specify device - use the device Accelerate chose
     model_inputs = tokenizer([text], return_tensors="pt")
-    
-    # Move inputs to the same device as the model
     if hasattr(model, 'device'):
         model_inputs = {k: v.to(model.device) for k, v in model_inputs.items()}
-    
     generated_ids = model.generate(
         **model_inputs,
         max_new_tokens=4098,
         temperature=0.1
     )
-    
     generated_ids = [
-        output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
-    ]
-    
+    output_ids[len(input_ids):] 
+    for input_ids, output_ids in zip(model_inputs["input_ids"], generated_ids)
+]  
     response = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
-    
     return response

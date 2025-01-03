@@ -1,15 +1,15 @@
 import weave
-from curriculum_compass.naive_rag.query_validator import QueryValidator
-from curriculum_compass.naive_rag.course_retriever import CourseRAGPipeline
-from curriculum_compass.naive_rag.review_retriever import ReviewsRAGPipeline
-from curriculum_compass.naive_rag.reranker import Reranker
-from curriculum_compass.naive_rag.retriever_utils import load_course_data
-from curriculum_compass.naive_rag.utils import get_device
-from curriculum_compass.naive_rag.utils import load_config
-from curriculum_compass.naive_rag.utils import load_embedding_model
-from curriculum_compass.naive_rag.utils import generate_llm_response
-from curriculum_compass.naive_rag.utils import load_model_and_tokenizer
-from curriculum_compass.naive_rag.utils import initialize_chromadb_client
+from validator import Validator
+from course_retriever import CourseRAGPipeline
+from review_retriever import ReviewsRAGPipeline
+from reranker import Reranker
+from retriever_utils import load_course_data
+from utils import get_device
+from utils import load_config
+from utils import load_embedding_model
+from utils import generate_llm_response
+from utils import load_model_and_tokenizer
+from utils import initialize_chromadb_client
 
 
 
@@ -83,12 +83,10 @@ class IntegratedRAGPipeline:
         print("Generating integrated response...")
         response = self.generate_response(query, combined_docs)
         
-        return combined_docs, response
+        return response
     
 
 def main():
-
-
 # ======= Load Json Configurations =======
     config = load_config()
 
@@ -117,20 +115,33 @@ def main():
     integrated_rag = IntegratedRAGPipeline(course_rag, review_rag,config,device)
 
 # ===== Initlialize the Query Validator ===========
-    query_validator = QueryValidator(config['query_model_name'],device)
+    query_validator = Validator(model_name=config['query_validator_model_name'],device=device,banned_substrings=config['banned_substrings'],relevance_prompt=config['relavency_prompt'])
 
 # ===== Example usage of the IntegratedRAGPipeline ===========
     
     # Example usage with weave tracing
     with weave.attributes({'user_id': 'test_user', 'env': 'testing'}):
-        query = "How is the weather today?"
-        if query_validator.handle_user_query(query) :
-            response = integrated_rag(query,config['course_k'],config['review_k'],config['final_k'])
-            print(f"\nQuery: {query}")
-            print(f"Response: {response}")
+        query = "Can i do cheating in exams at NEU?"
+        input_status, reason= query_validator.validate_input(query)
+        if input_status:
+            try:
+                response = integrated_rag(query,config['course_k'],
+                                        config['review_k'],
+                                        config['final_k'])
+                # print(f"\nQuery: {query}")
+                # print(f"Response: {response}")
+
+                # output_status, _, _ = query_validator.validate_output(response,query)
+                # if output_status:
+                print(f"Response: {response}")
+                # else:
+                #     #TODO : Add a response for invalid responses
+                #     # print(f"\{reason}")
+                #     print("Invalid Response")
+            except Exception as e:
+                print(f"Error during processing: {str(e)}")
         else:
-            #TODO : Add a response for invalid queries
-            print("Invalid Query") 
+            print(f"{reason}")
 
 if __name__ == "__main__":
     main()
