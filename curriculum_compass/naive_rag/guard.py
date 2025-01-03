@@ -12,7 +12,7 @@ class LLMGuard:
         Initialize LLM Guard scanners for both input and output.
         
         Args:
-            model_name: The name of the model being used (for token limit calculation)
+            banned_substrings: List of substrings to ban in user input
         """
         # Initialize input scanners
         self.input_scanners = [
