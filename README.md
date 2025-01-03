@@ -33,6 +33,7 @@
     - [Dataset Composition](#dataset-composition)
     - [Dataset Repository](#dataset-repository)
     - [Conclusion (Dataset)](#conclusion-dataset)
+- [Supervised Fine Tuning](#sft)
 - [Evaluation](#evaluation)
 - [License](#license)
 - [Contact](#contact)
@@ -209,11 +210,11 @@ This component is responsible for verifying that user queries meet specific poli
 - **If relevant:**
   - The query is allowed to move forward in the pipeline  
 
-#### First-Level Validation: LLMGuard
+### First-Level Validation: LLMGuard
 
 To ensure queries meet fundamental content requirements, we leverage a custom class called **LLMGuard**. This class internally uses an LLM-based guardrail library to detect various forms of violations.
 
-##### Checks Performed
+#### Checks Performed
 
 1. **Gibberish**  
    Determines if the query is largely nonsensical or unintelligible.
@@ -227,7 +228,7 @@ To ensure queries meet fundamental content requirements, we leverage a custom cl
 4. **Token Limit Exceeded**  
    Verifies the query stays within a defined size limit for processing.
 
-##### Failure Response
+#### Failure Response
 
 If any of these checks fail, the system automatically generates a concise, user-friendly explanation using an LLM prompt. The explanation:
 
@@ -235,7 +236,7 @@ If any of these checks fail, the system automatically generates a concise, user-
 - Briefly and constructively explains why the query was flagged.
 - Suggests a revised query that aligns with acceptable language and content guidelines (focusing on academic and professional phrasing).
 
-##### Prompt Example
+#### Prompt Example
 
 Below is an illustrative snippet of the prompt used to generate user-friendly responses for guard failures:
 
@@ -339,7 +340,7 @@ Your output:
 user_query = f" Query: {{query}}\\n\\nAnswer:"
 ```
 
-## Failure Response
+### Failure Response
 
 Queries deemed **"NOT RELEVANT"** trigger an LLM-based explanation. The user receives:
 
@@ -347,7 +348,7 @@ Queries deemed **"NOT RELEVANT"** trigger an LLM-based explanation. The user rec
 2. A brief explanation of why their question does not pertain to NEU academics  
 3. A suggested question that is academically focused and related to NEU courses or professors  
 
-### Prompt Example
+#### Prompt Example
 
 Below is an illustrative snippet of the prompt used for generating user-friendly responses to irrelevant queries:
 
@@ -392,7 +393,7 @@ Make the suggestion feel natural and focused on what students might want to know
 """
 ```
 
-### The Final Workflow
+#### The Final Workflow
 
 1. **User Query Received**  
    - The pipeline first passes the user query to **LLMGuard** for content compliance checks.
@@ -470,7 +471,7 @@ The outputs from the course and review retrievers are then combined and re-ranke
 
 The **Curriculum Compass** project demonstrates an advanced application of retrieval and generation techniques to meet the needs of university students. By combining **hybrid retrieval methods**, **dense embeddings**, and **cross-encoder reranking**, the system ensures high-quality responses to even the most ambiguous queries. The integration of multiple pipelines into a unified framework underscores its potential for robust performance and adaptability in real-world applications.
 
-### Synthetic Dataset Creation
+## Synthetic Dataset Creation
 
 **Objective:**  
 The goal of this effort was to validate the hypothesis that the capacity of a larger language model (LLM) can be transferred to a smaller LLM up to a certain threshold for domain-specific tasks. To achieve this, we created a synthetic dataset comprising *(question, context, response)* triples. The dataset was generated using a larger LLM, and the smaller LLM was fine-tuned on it to test the hypothesis.
@@ -502,10 +503,10 @@ Output Format:
 }
 ```
 
-### Context Retrieval
+#### Context Retrieval
 - An **Integrated Retriever** was employed to fetch relevant context for each query. This ensured that the generated responses were grounded in accurate and specific information.
 
-### Response Generation
+#### Response Generation
 - A larger LLM was tasked with generating responses for each *(question, context)* pair.  
 - This process followed the system prompt:
 
@@ -521,7 +522,7 @@ Response:
 {generated_response}
 ```
 
-### Topics and Course Coverage
+#### Topics and Course Coverage
 - The dataset comprehensively covered topics such as **Machine Learning**, **Deep Learning**, **Data Science**, **Programming**, and **Development**.
 - It included a broad spectrum of courses, such as:
   - Foundations of Artificial Intelligence
@@ -544,9 +545,37 @@ The synthetic dataset has been versioned and published in the Hugging Face repos
 #### Conclusion (Dataset)
 This synthetic dataset serves as a foundational resource for transferring knowledge from larger to smaller LLMs. By leveraging diverse queries, context retrieval, and robust response generation, the dataset enables fine-tuning smaller LLMs for enhanced domain-specific performance.
 
+## Supervised Fine Tuning:
+We performed supervised fine-tuning using parameter-efficient fine-tuning methods, specifically LoRA (Low-Rank Adaptation) and QLoRA (Quantized LoRA), on the Qwen 2.5-0.5B Instruct model. LoRA enables efficient fine-tuning by introducing low-rank updates to pre-trained model weights, significantly reducing the number of trainable parameters. This results in faster training and lower memory consumption while maintaining strong performance. QLoRA extends this concept by incorporating quantization techniques, reducing the model's memory footprint even further, enabling fine-tuning on resource-constrained hardware. However, LoRA, while efficient, can sometimes struggle with extreme quantization settings, potentially impacting downstream performance. QLoRA addresses this with better memory efficiency but introduces quantization noise, which can slightly degrade the model's accuracy in specific tasks. Both methods provide practical trade-offs between performance and resource utilization, making them ideal for fine-tuning large language models in constrained environments.
 
-### Evaluation
+
+## Evaluation
 
 For the Curriculum Compass project, we evaluated the RAG (Retrieval-Augmented Generation) system using a comprehensive set of metrics to assess its effectiveness and reliability. The evaluation employed both traditional n-gram-based metrics, such as ROUGE and BLEU, and semantic evaluation metrics like BERTScore. N-gram metrics like ROUGE and BLEU provided insight into the lexical overlap between the generated responses and the ground truth, measuring precision and recall at different granularity levels. While these metrics offer a straightforward and interpretable way to gauge performance, they may not fully capture the semantic coherence of the responses, particularly for nuanced or paraphrased answers. BERTScore addressed this limitation by leveraging contextual embeddings to evaluate the semantic similarity of the generated content to the reference answers, offering a more robust assessment of the RAG system's ability to produce contextually relevant responses.
 
 Additionally, we used LLM-as-a-judge to evaluate the RAG system across the RAG triad metrics: relevance, accuracy, and groundedness. This approach involved leveraging large language models to holistically assess the quality of responses based on their alignment with retrieved knowledge, factual accuracy, and adherence to the source material. By incorporating synthetic datasets specifically designed for the task, we ensured that the evaluation accounted for diverse scenarios and query complexities. This dual-layer evaluation approach—combining traditional and modern metrics—provided a well-rounded view of the system’s performance, enabling us to identify areas of strength and opportunities for improvement in both retrieval and generation components.
+
+## License
+
+This project is licensed under the [MIT License](https://opensource.org/licenses/MIT). Feel free to fork it and use it however you want, in accordance with the terms of the MIT License. For further details, refer to the `LICENSE` file provided in the repository.
+
+## Contact
+
+For inquiries, please reach out to the authors:
+
+- **Kishore Sampath** – [sampath.ki@northeastern.edu](mailto:sampath.ki@northeastern.edu)
+- **Pratheesh** – [lnu.prat@northeastern.edu](mailto:lnu.prat@northeastern.edu)
+
+## Citations
+
+If you would like to reference or cite this project in your research or documentation, you can use the following BibTeX entry as a template (update as needed with publication details and dates):
+
+```bibtex
+@misc{curriculum_compass_2025,
+  author       = {Sampath, Kishore and Pratheesh},
+  title        = {Curriculum Compass: A Hybrid RAG Chatbot Empowering Northeastern Students in Course Selection},
+  howpublished = {\url{[Curriculum Compass](https://github.com/Kishore-Pratheesh-AI-Projects/course-registration-chatbot)}}, 
+  year         = {2025},
+  note         = {[MIT License]},
+}
+```
