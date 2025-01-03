@@ -2,6 +2,8 @@
 
 ## Table of Contents
 - [Overview](#overview)
+- [System Architecture](#system-architecture)
+  - [Query Processing and RAG Pipeline](#query-processing-and-rag-pipeline)
 - [Data Collection](#data-collection)
   - [Review Data](#review-data)
     - [Review Data Schema](#review-data-schema)
@@ -43,6 +45,29 @@
 
 ## Overview
 **Curriculum Compass** is a Hybrid Retrieval-Augmented Generation (RAG) chatbot designed to assist Northeastern University students in selecting courses. By combining historical course review data from NuTrace with upcoming course offerings from the NU Banner API, the chatbot aims to provide personalized guidance and insights to help students make informed decisions.
+
+## System Architecture
+### Query Processing and RAG Pipeline
+![System Architecture](images/Curriculum_Compass_System_Architecture_.png)
+*Figure 1: Complete system architecture showing the data pipeline, query processing, and hybrid RAG components*
+
+The system architecture consists of three main components:
+
+1. **Data Pipeline**
+   - TRACE PDFs parsing for historical course reviews
+   - NUBanner API integration for current course offerings
+   - Structured storage in Review and Course databases
+
+2. **Query Processing**
+   - Content Policy Check with user-friendly violation explanations
+   - Relevancy Validation with suggested alternatives for off-topic queries
+   - Three-line response format for both policy violations and irrelevant queries
+
+3. **Hybrid-RAG**
+   - Dual-path retrieval system (Course and Review information)
+   - Multiple retrieval methods (TF-IDF and Dense Retrieval)
+   - Cross-encoder re-ranking for improved response relevance
+   - Final response generation through LLM
 
 ## Data Collection
 
