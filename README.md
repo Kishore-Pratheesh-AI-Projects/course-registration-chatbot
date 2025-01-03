@@ -26,6 +26,7 @@
     - [Initial Design Summary](#initial-design-summary)
     - [Conclusion (Hybrid RAG)](#conclusion-hybrid-rag)
 - [Synthetic Dataset Creation](#synthetic-dataset-creation)
+  - [Synthetic Dataset Creation and Model Training Pipeline](#synthetic-dataset-creation-and-model-training-pipeline)
   - [Dataset Creation Process](#dataset-creation-process)
     - [Seed Queries](#seed-queries)
     - [Rephrased Variants](#rephrased-variants)
@@ -499,6 +500,33 @@ The outputs from the course and review retrievers are then combined and re-ranke
 The **Curriculum Compass** project demonstrates an advanced application of retrieval and generation techniques to meet the needs of university students. By combining **hybrid retrieval methods**, **dense embeddings**, and **cross-encoder reranking**, the system ensures high-quality responses to even the most ambiguous queries. The integration of multiple pipelines into a unified framework underscores its potential for robust performance and adaptability in real-world applications.
 
 ## Synthetic Dataset Creation
+
+## Synthetic Dataset Creation and Model Training Pipeline
+![Training Pipeline](images/Curriculum_Compass_Training_Pipeline.png)
+*Figure 2: Training and evaluation pipeline showing synthetic data generation, model fine-tuning, and comprehensive evaluation process*
+
+The training pipeline consists of three major components:
+
+1. **Data Generation**
+   - Creation of seed queries and variants
+   - Context retrieval from course and review databases
+   - Large LLM (Qwen-72B) generating gold-standard responses
+   - Production of synthetic dataset with (Query, Context, Gold Response) triples
+
+2. **Model Training**
+   - Data preprocessing for fine-tuning
+   - Small base LLM (Qwen-0.5B) fine-tuning using QLoRA
+   - 4-bit quantization for efficient training
+   - Generation of fine-tuned model optimized for course-related queries
+
+3. **Evaluation Suite**
+   - Test queries with evaluation context
+   - Parallel response generation:
+     * Fine-tuned model responses
+     * Large LLM gold responses
+   - Multiple evaluation metrics:
+     * Automated metrics (ROUGE, BLEU, BERTScore)
+     * LLM-as-Judge scoring (Relevance, Groundedness, Accuracy)
 
 **Objective:**  
 The goal of this effort was to validate the hypothesis that the capacity of a larger language model (LLM) can be transferred to a smaller LLM up to a certain threshold for domain-specific tasks. To achieve this, we created a synthetic dataset comprising *(question, context, response)* triples. The dataset was generated using a larger LLM, and the smaller LLM was fine-tuned on it to test the hypothesis.
