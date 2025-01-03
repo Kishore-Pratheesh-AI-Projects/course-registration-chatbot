@@ -575,7 +575,7 @@ If you would like to reference or cite this project in your research or document
 @misc{curriculum_compass_2025,
   author       = {Sampath, Kishore and Pratheesh},
   title        = {Curriculum Compass: A Hybrid RAG Chatbot Empowering Northeastern Students in Course Selection},
-  howpublished = {\url{[Curriculum Compass](https://github.com/Kishore-Pratheesh-AI-Projects/course-registration-chatbot)}}, 
+  howpublished = {\url{https://github.com/Kishore-Pratheesh-AI-Projects/course-registration-chatbot}},
   year         = {2025},
   note         = {[MIT License]},
 }
