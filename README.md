@@ -35,6 +35,7 @@
     - [Conclusion (Dataset)](#conclusion-dataset)
 - [Supervised Fine Tuning](#supervised-fine-tuning)
 - [Evaluation](#evaluation)
+- [Project Directory Structure](#project-directory-structure)
 - [License](#license)
 - [Contact](#contact)
 - [Citations](#citations)
@@ -555,6 +556,63 @@ We performed supervised fine-tuning using parameter-efficient fine-tuning method
 For the Curriculum Compass project, we evaluated the RAG (Retrieval-Augmented Generation) system using a comprehensive set of metrics to assess its effectiveness and reliability. The evaluation employed both traditional n-gram-based metrics, such as ROUGE and BLEU, and semantic evaluation metrics like BERTScore. N-gram metrics like ROUGE and BLEU provided insight into the lexical overlap between the generated responses and the ground truth, measuring precision and recall at different granularity levels. While these metrics offer a straightforward and interpretable way to gauge performance, they may not fully capture the semantic coherence of the responses, particularly for nuanced or paraphrased answers. BERTScore addressed this limitation by leveraging contextual embeddings to evaluate the semantic similarity of the generated content to the reference answers, offering a more robust assessment of the RAG system's ability to produce contextually relevant responses.
 
 Additionally, we used LLM-as-a-judge to evaluate the RAG system across the RAG triad metrics: relevance, accuracy, and groundedness. This approach involved leveraging large language models to holistically assess the quality of responses based on their alignment with retrieved knowledge, factual accuracy, and adherence to the source material. By incorporating synthetic datasets specifically designed for the task, we ensured that the evaluation accounted for diverse scenarios and query complexities. This dual-layer evaluation approach—combining traditional and modern metrics—provided a well-rounded view of the system’s performance, enabling us to identify areas of strength and opportunities for improvement in both retrieval and generation components.
+
+## Project Directory Structure
+
+```
+├── .gitignore                    # Specifies files/directories for Git to ignore
+├── LICENSE                       # MIT License file
+├── README.md                     # Main project documentation (this file)
+├── curriculum_compass            # Core Python package/module for the project
+│   ├── __init__.py               # Makes `curriculum_compass` a Python package
+│   ├── data_pipeline             # Package handling data collection and preprocessing
+│   │   ├── __init__.py
+│   │   └── notebooks
+│   │       ├── NeuBanner_Data_Scraping.ipynb
+│   │       │   # Notebook for scraping or fetching course offerings from the NU Banner API
+│   │       ├── Trace_Data_Scraping.ipynb
+│   │       │   # Notebook for scraping or parsing instructor/course reviews from NuTrace
+│   │       ├── __init__.py
+│   │       └── data
+│   │           ├── courses.csv   # CSV file containing retrieved course data
+│   │           └── reviews.csv   # CSV file containing extracted course review data
+│   ├── dataset_creation          # Package handling synthetic dataset creation
+│   │   ├── __init__.py
+│   │   ├── notebooks
+│   │   │   ├── SFT_Dataset_Creation.ipynb
+│   │   │   │   # Notebook for creating the synthetic dataset used for fine-tuning
+│   │   │   ├── __init__.py
+│   │   │   └── questions.pkl
+│   │   │       # Pickle file containing new rephrased seed queries from LLMs used in dataset creation
+│   │   └── sft_dataset_creation.py
+│   │       # Python script that automates the synthetic dataset creation process
+│   ├── model_training            # Package containing code/notebooks for model training/fine-tuning
+│   │   ├── __init__.py
+│   │   └── notebooks
+│   │       └── __init__.py
+│   └── naive_rag                 # Package containing the initial or "naive" RAG implementation
+│       ├── __init__.py
+│       ├── chromadb              # Directory holding ChromaDB data files (database for embeddings)
+│       ├── config.json           # Configuration file for RAG settings or environment variables
+│       ├── course_retriever.py   # Module to retrieve course data from vector databases or CSV files
+│       ├── create_vectorstore.py # Script to ingest data and build a vector store
+│       ├── data_processor.py     # Module for data cleaning/preprocessing prior to vectorization
+│       ├── integrated_rag.py     # Script for integrating course + review retrieval into final RAG pipeline
+│       ├── notebooks
+│       │   ├── Course_pre_processing.ipynb
+│       │   │   # Notebook demonstrating initial data cleaning/preprocessing steps
+│       │   └── NaiveRAG-Kishore-Implementation.ipynb
+│       │       # Notebook detailing an example or reference implementation of a naive RAG pipeline
+│       ├── query_validator.py    # LLMGuard + Relevancy checks for user queries
+│       ├── reranker.py           # Module for re-ranking retrieved documents using cross-encoders
+│       ├── retriever_utils.py    # Utility functions for retrieval and vector search
+│       ├── review_retriever.py   # Module to retrieve review data from vector databases or CSV files
+│       ├── search_system.py      # Core "search" logic orchestrating retrieval processes
+│       ├── time_utils.py         # Utility functions for handling scheduling/time-based data
+│       └── utils.py              # General-purpose utility functions (e.g., logging, config parsing)
+├── requirements.txt              # Dependencies and library requirements for the project
+└── setup.py                      # Setup script for packaging/distribution (if publishing this project)
+```
 
 ## License
 
