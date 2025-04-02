@@ -52,61 +52,6 @@ def create_vector_index_if_not_exists(index_id, embedding_dimension, region="us-
         logger.error(f"Error creating vector index: {e}")
         raise
 
-# def upload_vectors_to_index(index, vectors, documents, ids):
-#     """Upload vectors to a Vector Search index."""
-#     try:
-#         # First, we deploy the index to an endpoint if not already deployed
-#         endpoints = index.deployed_indexes
-#         if not endpoints:
-#             logger.info(f"Deploying index {index} to endpoint")
-#             index_endpoint = aiplatform.MatchingEngineIndexEndpoint.create(
-#                 display_name=f"{index.display_name}-endpoint",
-#                 public_endpoint_enabled=True
-#             )
-#             index_endpoint.deploy_index(
-#                 index=index,
-#                 deployed_index_id=index.display_name
-#             )
-#             logger.info(f"Index deployed to endpoint: {index_endpoint.resource_name}")
-#         else:
-#             logger.info(f"Index already deployed to endpoint")
-#             index_endpoint = endpoints[0].index_endpoint
-        
-#         # Now, upload the vectors in batches
-#         batch_size = 100  # Adjust based on your needs
-#         total_batches = (len(vectors) + batch_size - 1) // batch_size
-        
-#         logger.info(f"Uploading {len(vectors)} vectors in {total_batches} batches")
-        
-#         for i in range(0, len(vectors), batch_size):
-#             batch_end = min(i + batch_size, len(vectors))
-#             batch_vectors = vectors[i:batch_end]
-#             batch_docs = documents[i:batch_end]
-#             batch_ids = ids[i:batch_end]
-            
-#             batch_items = []
-#             for vec, doc, doc_id in zip(batch_vectors, batch_docs, batch_ids):
-#                 batch_items.append({
-#                     "id": doc_id,
-#                     "embedding": vec.tolist(),
-#                     "restricts": {"namespace": "course_data"},
-#                     "metadata": {"document": doc}
-#                 })
-            
-#             # Use the appropriate method to update the index
-#             index_endpoint.upsert(
-#                 deployed_index_id=index.display_name,
-#                 items=batch_items
-#             )
-            
-#             logger.info(f"Uploaded batch {i//batch_size + 1}/{total_batches}")
-        
-#         logger.info(f"Successfully uploaded all vectors to index")
-#         return True
-    
-#     except Exception as e:
-#         logger.error(f"Error uploading vectors to index: {e}")
-#         raise
 def upload_vectors_to_index(index, deployed_index_id, vectors, documents, ids):
     """Upload vectors to a Vector Search index using the specified deployed index id."""
     try:
@@ -144,7 +89,7 @@ def upload_vectors_to_index(index, deployed_index_id, vectors, documents, ids):
                 batch_items.append({
                     "id": doc_id,
                     "embedding": vec.tolist(),
-                    "restricts": {"namespace": "course_data"},
+                    "restricts": {"namespace": "review_data"},  # Use review_data namespace
                     "metadata": {"document": doc}
                 })
             
@@ -174,10 +119,15 @@ def generate_embeddings_function(cloud_event):
         bucket_name = cloud_event.data["bucket"]
         file_name = cloud_event.data["name"]
         
-        # Process only processed course files
+        # Process only processed review files
         if not (file_name.startswith('processed/') and file_name.endswith('.jsonl')):
             logger.info(f"Skipping non-processed file: {file_name}")
             return {"success": True, "message": "Skipped non-processed file"}
+            
+        # Check if this is a review file (skip course files)
+        if 'reviews' not in file_name and not file_name.startswith('processed/reviews_'):
+            logger.info(f"Skipping non-review file: {file_name}")
+            return {"success": True, "message": "Skipped non-review file"}
         
         # Download file from GCS
         bucket = storage_client.bucket(bucket_name)
@@ -201,7 +151,7 @@ def generate_embeddings_function(cloud_event):
         
         # Generate embeddings
         model_name = os.environ.get('EMBEDDING_MODEL', 'all-MiniLM-L6-v2')
-        logger.info(f"Generating embeddings for {len(documents)} documents using {model_name}")
+        logger.info(f"Generating embeddings for {len(documents)} review documents using {model_name}")
         
         embeddings = embed_texts(documents, model_name)
         
@@ -209,8 +159,8 @@ def generate_embeddings_function(cloud_event):
         embedding_dimension = embeddings[0].shape[0]
         logger.info(f"Embedding dimension: {embedding_dimension}")
         
-        # Create or get vector index
-        index_id = os.environ.get('REVIEW_INDEX_ENDPOINT', 'curriculum-compass-course-index')
+        # Create or get vector index using REVIEW_INDEX_ENDPOINT
+        index_id = os.environ.get('REVIEW_INDEX_ENDPOINT', 'curriculum-compass-review-index')
         region = os.environ.get('GCP_REGION', 'us-central1')
         
         index = create_vector_index_if_not_exists(index_id, embedding_dimension, region)
@@ -243,13 +193,13 @@ def generate_embeddings_function(cloud_event):
         
         # Also save a "latest" version if this is the latest processed file
         if 'latest' in file_name:
-            latest_output_name = "embeddings/courses_embeddings_latest.npz"
+            latest_output_name = "embeddings/reviews_embeddings_latest.npz"  # Changed to reviews_embeddings_latest
             latest_output_blob = output_bucket.blob(latest_output_name)
             latest_output_blob.upload_from_filename(temp_np_path)
         
         os.unlink(temp_np_path)  # Clean up temp file
         
-        logger.info(f"Embeddings uploaded to gs://{output_bucket_name}/{output_file_name}")
+        logger.info(f"Review embeddings uploaded to gs://{output_bucket_name}/{output_file_name}")
         
         return {
             "success": True,
