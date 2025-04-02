@@ -1,3 +1,4 @@
+#TODO :  Add the Query validation using LLM Guard
 import os
 import json
 import logging
@@ -28,6 +29,8 @@ storage_client = storage.Client()
 # Initialize RAG system
 rag_system = CurriculumCompassRAG()
 
+# Initalize the Query validation using LLM Guard
+
 # Initialize Vertex AI for LLM
 aiplatform.init(
     project=config.PROJECT_ID,
@@ -45,6 +48,7 @@ if config.LLM_ENDPOINT:
 
 
 def generate_response(query, context):
+    #TODO : Check this function properly and update this code to to apply proper messgae template and format before passing it to LLM
     """Generate response using Vertex AI LLM endpoint"""
     if not llm_endpoint:
         return "LLM endpoint not configured. Please check your configuration."
@@ -113,6 +117,8 @@ def process_query():
         session_id = data.get('session_id', 'anonymous')
         
         logger.info(f"Processing query from session {session_id}: {query}")
+
+        # Validate query using LLM Guard (if implemented)
         
         # Retrieve and rerank documents
         documents = rag_system.retrieve_and_rerank(query)
