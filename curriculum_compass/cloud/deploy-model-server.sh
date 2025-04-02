@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# Set your GCP project ID
+PROJECT_ID=$(gcloud config get-value project)
+
+# Build the Qwen model server
+cd qwen-model-server
+gcloud builds submit --tag gcr.io/${PROJECT_ID}/qwen-model-server
+
+# Deploy the model server to Cloud Run
+gcloud run deploy qwen-model-server \
+  --image gcr.io/${PROJECT_ID}/qwen-model-server \
+  --platform managed \
+  --region us-central1 \
+  --memory 16Gi \
+  --cpu 4 \
+  --timeout 3600 \
+  --min-instances 0 \
+  --max-instances 1 \
+  --allow-unauthenticated
+
+# Get the URL of the deployed model server
+MODEL_SERVER_URL=$(gcloud run services describe qwen-model-server --region us-central1 --format="value(status.url)")
+echo "Model server deployed at: $MODEL_SERVER_URL"
