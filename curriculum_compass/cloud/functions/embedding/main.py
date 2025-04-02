@@ -210,12 +210,12 @@ def generate_embeddings_function(cloud_event):
         logger.info(f"Embedding dimension: {embedding_dimension}")
         
         # Create or get vector index
-        index_id = os.environ.get('COURSE_INDEX_ENDPOINT', 'curriculum-compass-course-index')
+        index_id = os.environ.get('REVIEW_INDEX_ENDPOINT', 'curriculum-compass-course-index')
         region = os.environ.get('GCP_REGION', 'us-central1')
         
         index = create_vector_index_if_not_exists(index_id, embedding_dimension, region)
 
-        deployed_index_id = os.environ.get('COURSE_DEPLOYED_INDEX', index.display_name)
+        deployed_index_id = os.environ.get('REVIEW_DEPLOYED_INDEX', index.display_name)
 
         logger.info(f"Using deployed index ID: {deployed_index_id}")
 
