@@ -1,0 +1,7 @@
+flask==2.3.3
+gunicorn==21.2.0
+transformers==4.36.2
+torch==2.0.1
+accelerate==0.25.0
+sentencepiece==0.1.99
+protobuf==4.25.1
