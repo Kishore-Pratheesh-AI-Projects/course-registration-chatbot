@@ -3,6 +3,7 @@ import os
 import json
 import logging
 import datetime
+import requests
 from flask import Flask, request, jsonify
 from google.cloud import aiplatform
 from google.cloud import storage
@@ -27,9 +28,13 @@ config = get_config()
 storage_client = storage.Client()
 
 # Initialize RAG system
+
+
+
 rag_system = CurriculumCompassRAG()
 
 # Initalize the Query validation using LLM Guard
+# query_validator = Validator(model_name=config['query_validator_model_name'],device=device,banned_substrings=config['banned_substrings'],relevance_prompt=config['relavency_prompt'])
 
 # Initialize Vertex AI for LLM
 aiplatform.init(
@@ -48,33 +53,50 @@ if config.LLM_ENDPOINT:
 
 
 def generate_response(query, context):
-    #TODO : Check this function properly and update this code to to apply proper messgae template and format before passing it to LLM
-    """Generate response using Vertex AI LLM endpoint"""
-    if not llm_endpoint:
-        return "LLM endpoint not configured. Please check your configuration."
-    
+    """Generate response using Qwen2.5-3B model server"""
     try:
-        # Format prompt with system instruction and context
-        system_prompt = config.SYSTEM_PROMPT
-        user_content = f"Context:\n{context}\n\nQuery: {query}\n\nAnswer:"
+        # Format context if needed
+        if isinstance(context, list):
+            context = "\n\n".join(context)
         
-        # Prepare the request - format may vary depending on the specific model
-        instances = [{
-            "prompt": f"{system_prompt}\n\n{user_content}"
-        }]
+        # Prepare the request to the model server
+        model_server_url = os.environ.get('QWEN_MODEL_SERVER_URL')
+        if not model_server_url:
+            return "Model server URL not configured. Please check your environment variables."
         
-        # Call the model endpoint
-        response = llm_endpoint.predict(instances=instances)
+        payload = {
+            "system_prompt": config.SYSTEM_PROMPT,
+            "query": query,
+            "context": context
+        }
+        
+        # Call the model server
+        logger.info(f"Calling Qwen model server with query: {query[:50]}...")
+        response = requests.post(
+            f"{model_server_url}/generate",
+            json=payload,
+            headers={"Content-Type": "application/json"},
+            timeout=60  # Increased timeout for model inference
+        )
+        
+        # Check response status
+        response.raise_for_status()
         
         # Extract the response text
-        if hasattr(response, 'predictions') and response.predictions:
-            return response.predictions[0]
-        else:
-            return "Unable to generate a response from the model."
+        result = response.json()
+        return result.get("response", "Unable to generate a response from the model.")
+    
+    except requests.exceptions.Timeout:
+        logger.error("Request to model server timed out")
+        return "I'm sorry, but the response is taking too long. Please try again later."
+    
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error communicating with model server: {e}")
+        return f"I'm sorry, but I couldn't generate a response at this time."
     
     except Exception as e:
-        logger.error(f"Error generating response: {e}")
-        return f"Error: {str(e)}"
+        logger.error(f"Unexpected error in generate_response: {e}")
+        return f"An error occurred while generating the response."
 
 
 def log_conversation(session_id, query, response):
